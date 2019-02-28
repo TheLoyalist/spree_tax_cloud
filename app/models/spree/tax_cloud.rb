@@ -1,7 +1,6 @@
 module Spree
   class TaxCloud
-
-    def self.update_config
+    def self.reload_config
       ::TaxCloud.configure do |config|
         config.api_login_id = Spree::Config.taxcloud_api_login_id
         config.api_key = Spree::Config.taxcloud_api_key

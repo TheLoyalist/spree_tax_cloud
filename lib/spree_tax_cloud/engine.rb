@@ -12,7 +12,7 @@ module SpreeTaxCloud
     end
 
     config.after_initialize do
-      Spree::TaxCloud.update_config
+      Spree::TaxCloud.reload_config
     end
 
     initializer "spree_tax_cloud.permitted_attributes" do |_app|
