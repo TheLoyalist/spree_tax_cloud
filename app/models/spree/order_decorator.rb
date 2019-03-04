@@ -24,4 +24,14 @@ Spree::Order.class_eval do
     # JSONB to store the response.
     # The response argument carries the response from an order transaction.
   end
+
+  def tax_cloud_combined_items
+    shipments.flat_map(&:tax_cloud_items).group_by(&:stock_location_id).values.flat_map do |group|
+      group.group_by(&:id).values.map do |items|
+        item = items.first.dup
+        item.quantity = items.sum(&:quantity)
+        item
+      end
+    end
+  end
 end
