@@ -22,32 +22,53 @@ module Spree
       )
     end
 
-    def self.each_transaction(order)
-      Enumerator.new do |y|
-        item_groups = order.tax_cloud_combined_items.group_by(&:stock_location_id).values
+    def self.stock_location_ids(order)
+      order.shipments.pluck(:stock_location_id).uniq.sort
+    end
 
-        transactions = item_groups.each do |items|
-          stock_location = Spree::StockLocation.find(items.first.stock_location_id)
+    def self.transaction_for_stock_location(order, stock_location_id)
+      stock_location = Spree::StockLocation.find(stock_location_id)
 
-          transaction = ::TaxCloud::Transaction.new(
-            customer_id: order.user_id || order.email,
-            order_id: order.number,
-            cart_id: "#{order.number}/#{stock_location.id}",
-            origin: address_from_spree_address(stock_location),
-            destination: address_from_spree_address(order.ship_address || order.bill_address)
-          )
-
-          transaction.cart_items = items.map.with_index do |item, index|
-            ::TaxCloud::CartItem.new({
-              index: index,
-              item_id: item.id,
-              tic: item.tic,
-              price: item.price,
-              quantity: item.quantity,
-            })
+      items =
+        order
+          .shipments
+          .where(stock_location_id: stock_location_id)
+          .flat_map(&:tax_cloud_items)
+          .group_by(&:id)
+          .values
+          .map do |items|
+            item = items.first.dup
+            item.quantity = items.sum(&:quantity)
+            item
           end
 
-          y << [transaction, items]
+      transaction =
+        ::TaxCloud::Transaction.new({
+          customer_id: order.user_id || order.email,
+          order_id: order.number,
+          cart_id: "#{order.number}/#{stock_location.id}",
+          origin: address_from_spree_address(stock_location),
+          destination: address_from_spree_address(order.ship_address || order.bill_address)
+        })
+
+      transaction.cart_items =
+        items.map.with_index do |item, index|
+          ::TaxCloud::CartItem.new({
+            index: index,
+            item_id: item.id,
+            tic: item.tic,
+            price: item.price,
+            quantity: item.quantity,
+          })
+        end
+
+      [transaction, items]
+    end
+
+    def self.each_transaction(order)
+      Enumerator.new do |y|
+        stock_location_ids(order).each do |stock_location_id|
+          y << transaction_for_stock_location(order, stock_location_id)
         end
       end
     end
