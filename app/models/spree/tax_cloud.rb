@@ -83,19 +83,20 @@ module Spree
       Rails.cache.fetch(['TaxCloudRatesForItem', item.tax_cloud_cache_key], time_to_idle: 5.minutes) do
         # In the case of a cache miss, we recompute the amounts for _all_ the LineItems and Shipments for this Order.
 
-        tax_amounts = each_transaction(item.order).reduce({
-          'Spree::LineItem' => {},
-          'Spree::Shipment' => {},
-        }) do |memo, (transaction, items)|
-          cart_items = transaction.lookup.cart_items
+        tax_amounts =
+          each_transaction(item.order).reduce({
+            'Spree::LineItem' => {},
+            'Spree::Shipment' => {},
+          }) do |memo, (transaction, items)|
+            cart_items = transaction.lookup.cart_items
 
-          items.each_with_index do |item, index|
-            memo[item.type][item.id] ||= 0
-            memo[item.type][item.id] += cart_items[index].tax_amount
+            items.each_with_index do |item, index|
+              memo[item.type][item.id] ||= 0
+              memo[item.type][item.id] += cart_items[index].tax_amount
+            end
+
+            memo
           end
-
-          memo
-        end
 
         tax_amounts['Spree::LineItem'].each do |id, tax_amount|
           Rails.cache.write(['TaxCloudRatesForItem', Spree::LineItem.find(id).tax_cloud_cache_key], tax_amount, time_to_idle: 5.minutes)
