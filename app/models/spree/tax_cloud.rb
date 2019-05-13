@@ -53,6 +53,10 @@ module Spree
     end
 
     def self.lookup(item)
+      # Sometimes (lol) shipments get updated "between the lines" and item instance isn't the
+      # same as the one returned by `find`. We need reload to get the recent `cache_key`.
+      item.reload if item.is_a?(Spree::Shipment)
+
       # Cache will expire if the order, any of its line items, or any of its shipments change.
       # When the cache expires, we will need to make another API call to TaxCloud.
       Rails.cache.fetch(['TaxCloudRatesForItem', item.tax_cloud_cache_key], time_to_idle: 5.minutes) do
