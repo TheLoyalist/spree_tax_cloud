@@ -86,6 +86,13 @@ module Spree
 
         Rails.cache.read(['TaxCloudRatesForItem', item.tax_cloud_cache_key])
       end
+    rescue ::TaxCloud::Errors::ApiError => e
+      if e.message.gsub("\s+", '') !~ /zipcode.+notvalid/
+        raise e
+      end
+
+      # Host application has to validate the address on it's own.
+      0
     end
   end
 end
