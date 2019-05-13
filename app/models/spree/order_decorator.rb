@@ -15,7 +15,8 @@ Spree::Order.class_eval do
   # an adjustment is not created for 0% rates. However, US orders must be
   # submitted to Tax Cloud even when the rate is 0%.
   def is_taxed_using_tax_cloud?
-    Spree::TaxRate.match(self.tax_zone).any? { |rate| rate.calculator_type == "Spree::Calculator::TaxCloudCalculator" }
+    # `shopify?` coming from our custom Spree installation, FYI.
+    !shopify? && Spree::TaxRate.match(self.tax_zone).any? { |rate| rate.calculator_type == "Spree::Calculator::TaxCloudCalculator" }
   end
 
   def log_tax_cloud(response)
@@ -27,6 +28,7 @@ Spree::Order.class_eval do
 
   def tax_cloud_combined_items
     shipments.flat_map(&:tax_cloud_items).group_by(&:stock_location_id).values.flat_map do |group|
+      # Sums quantities of items with the same `id` (line items) from all shipments.
       group.group_by(&:id).values.map do |items|
         item = items.first.dup
         item.quantity = items.sum(&:quantity)
