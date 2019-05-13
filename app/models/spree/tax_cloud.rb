@@ -106,7 +106,7 @@ module Spree
           Rails.cache.write(['TaxCloudRatesForItem', Spree::Shipment.find_by!(number: number).tax_cloud_cache_key], tax_amount, time_to_idle: 5.minutes)
         end
 
-        Rails.cache.read(['TaxCloudRatesForItem', item.tax_cloud_cache_key])
+        Rails.cache.read(['TaxCloudRatesForItem', item.tax_cloud_cache_key]).to_f
       end
     rescue ::TaxCloud::Errors::ApiError => e
       if e.message.gsub("\s+", '') !~ /zipcode.+notvalid/
