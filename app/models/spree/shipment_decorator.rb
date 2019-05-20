@@ -10,7 +10,7 @@ Spree::Shipment.class_eval do
         line_item.class.name,
         stock_location_id,
         line_item.price,
-        line_item.product&.tax_cloud_tic.presence || Spree::Config.taxcloud_default_product_tic,
+        line_item.product&.tax_cloud_tic,
         inventory_units_for_item(line_item).count,
       )
     end + [
