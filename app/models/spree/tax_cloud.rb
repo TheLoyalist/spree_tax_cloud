@@ -109,7 +109,9 @@ module Spree
         Rails.cache.read(['TaxCloudRatesForItem', item.tax_cloud_cache_key]).to_f
       end
     rescue ::TaxCloud::Errors::ApiError => e
-      if e.message.gsub("\s+", '') !~ /zipcode.+notvalid/
+      msg = e.message.gsub("\s+", '')
+
+      if msg !~ /zipcode.+notvalid/ && msg !~ /origincityismissing/
         raise e
       end
 
