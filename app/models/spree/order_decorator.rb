@@ -4,8 +4,8 @@ Spree::Order.class_eval do
   # an adjustment is not created for 0% rates. However, US orders must be
   # submitted to Tax Cloud even when the rate is 0%.
   def is_taxed_using_tax_cloud?
-    # `shopify?` coming from our custom Spree installation, FYI.
-    !shopify? && Spree::TaxRate.match(self.tax_zone).any? { |rate| rate.calculator_type == "Spree::Calculator::TaxCloudCalculator" }
+    # `shopify_derivative?` coming from our custom Spree installation, FYI.
+    !shopify_derivative? && Spree::TaxRate.match(self.tax_zone).any? { |rate| rate.calculator_type == "Spree::Calculator::TaxCloudCalculator" }
   end
 
   def log_tax_cloud(response)
