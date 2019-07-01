@@ -25,4 +25,9 @@ Spree::Order.class_eval do
       end
     end
   end
+
+  def pro_bono?
+    adjustment_total = all_adjustments.non_tax.sum(:amount)
+    (item_total + shipment_total + adjustment_total).zero?
+  end
 end
