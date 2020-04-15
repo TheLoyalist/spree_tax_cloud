@@ -13,7 +13,7 @@ Spree::Shipment.class_eval do
         line_item.id,
         line_item.class.name,
         stock_location_id,
-        (line_item.price unless pro_bono).to_f,
+        ((line_item.discounted_amount / line_item.quantity) unless pro_bono).to_f,
         line_item.product&.tax_cloud_tic,
         inventory_units_for_item(line_item).count,
       )
@@ -22,7 +22,7 @@ Spree::Shipment.class_eval do
         number,
         self.class.name,
         stock_location_id,
-        (cost unless pro_bono).to_f,
+        (discounted_amount unless pro_bono).to_f,
         Spree::Config.taxcloud_shipping_tic,
         1,
       )
