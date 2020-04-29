@@ -9,11 +9,18 @@ Spree::Shipment.class_eval do
     pro_bono = order.pro_bono?
 
     line_items.map do |line_item|
+      price =
+        if line_item.quantity.zero?
+          0
+        else
+          ((line_item.discounted_amount / line_item.quantity) unless pro_bono).to_f
+        end
+
       Spree::TaxCloud::Item.new(
         line_item.id,
         line_item.class.name,
         stock_location_id,
-        ((line_item.discounted_amount / line_item.quantity) unless pro_bono).to_f,
+        price,
         line_item.product&.tax_cloud_tic,
         inventory_units_for_item(line_item).count,
       )
